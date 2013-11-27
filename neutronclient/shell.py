@@ -350,21 +350,19 @@ class NeutronShell(app.App):
         module_path = os.path.dirname(os.path.abspath(__file__))
         ext_path = os.path.join(module_path, "v2_0", "contrib")
         ext_glob = os.path.join(ext_path, "*.py")
-        print ext_glob
         for ext_path in glob.iglob(ext_glob):
-            print ext_path
             name = os.path.basename(ext_path)[:-3]
             if name == "__init__":
                 continue
 
             module = imp.load_source(name, ext_path)
 
-            for attr_name, attr_value in module.__dict__.items():
-                try:
-                    if issubclass(attr_value, neutronV20.NeutronCommand):
+            if getattr(module, "EXTENSIONS"):
+                for attr_name, attr_value in module.EXTENSIONS.iteritems():
+                    try:
                         self.command_manager.add_command(attr_name, attr_value)
-                except TypeError:
-                    pass
+                    except TypeError:
+                        pass
 
         # This is instantiated in initialize_app() only when using
         # password flow auth
